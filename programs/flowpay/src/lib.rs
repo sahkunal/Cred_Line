@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("HU1Vqae6eUFNxu6kdWD2DoN9TksxevcAWxkSKXCVwnHk");
+declare_id!("mZMoMVBVHwMDwHdGTKphP5sAY5raL8z4tx51qai6TVX");
 
 pub mod errors;
 pub mod instructions;
@@ -12,8 +12,6 @@ use instructions::{
     create_flowpay::*,
     execute_flowpay::*,
     reapprove_flowpay::*,
-    subscriptions_flowpay::*,
-    users_flowpay::*,
 };
 
 #[program]
@@ -24,10 +22,8 @@ pub mod flowpay {
         ctx: Context<CreateFlowpay>,
         amount: u64,
         frequency: i64,
-        name: String,
-        description: String,
     ) -> Result<()> {
-        ctx.accounts.process(amount, frequency, name, description, &ctx.bumps)
+        ctx.accounts.process(amount, frequency, &ctx.bumps)
     }
 
     pub fn cancel_flowpay(ctx: Context<CancelFlowpay>) -> Result<()> {
@@ -38,8 +34,11 @@ pub mod flowpay {
         ctx.accounts.execute_flowpay(&ctx.bumps)
     }
 
-
     pub fn reapprove_flowpay(ctx: Context<ReapproveFlowpay>, amount: u64) -> Result<()> {
         ctx.accounts.process(amount)
+    }
+
+    pub fn close_payment_history(ctx: Context<ClosePaymentHistory>) -> Result<()> {
+        ctx.accounts.process()
     }
 }
