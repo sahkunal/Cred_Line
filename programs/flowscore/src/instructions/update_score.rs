@@ -71,22 +71,17 @@ impl<'info> UpdateScoreOnPayment<'info> {
     }
 }
 
-// Instruction 2: callable by ANYONE, off-chain keeper or worker
-// Penalizes the CLIENT (payer) if a payment is overdue
-// Does NOT touch the worker's (payee) score
 
 use crate::errors::FlowScoreError;
 
-const GRACE_PERIOD: i64 = 86_400; // 1 day grace before counted as missed
+const GRACE_PERIOD: i64 = 86_400; 
 
 #[derive(Accounts)]
 pub struct ReportMissedPayment<'info> {
-    pub reporter: Signer<'info>, // anyone — worker, keeper, etc.
+    pub reporter: Signer<'info>,
 
-    /// CHECK: the FlowPay subscription PDA, read-only
     pub flowpay: UncheckedAccount<'info>,
 
-    /// CHECK: client wallet being penalized
     pub payer_wallet: UncheckedAccount<'info>,
 
     #[account(
@@ -116,7 +111,42 @@ impl<'info> ReportMissedPayment<'info> {
         Ok(())
     }
 }
+#[derive(Accounts)]
+pub struct ReportFailedPayment<'info> {
+    pub caller: Signer<'info>, 
 
+    /// CHECK: client wallet
+    pub payer_wallet: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"score", payer_wallet.key().as_ref()],
+        bump = payer_score.bump,
+    )]
+    pub payer_score: Account<'info, ScoreAccount>,
+}
+
+impl<'info> ReportFailedPayment<'info> {
+    pub fn process(&mut self, reason: FailureReason) -> Result<()> {
+        let penalty = match reason {
+            FailureReason::InsufficientFunds  => 30,
+            FailureReason::RevokedDelegate    => 50,
+        };
+        self.payer_score.default_penalty += penalty;
+        self.payer_score.composite = recalculate(
+            self.payer_score.payment_score,
+            self.payer_score.default_penalty,
+        );
+        self.payer_score.last_updated = Clock::get()?.unix_timestamp;
+        Ok(())
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub enum FailureReason {
+    InsufficientFunds,
+    RevokedDelegate,
+}
 
 
 fn recalculate(payment_score: u32, default_penalty: u32) -> u32 {

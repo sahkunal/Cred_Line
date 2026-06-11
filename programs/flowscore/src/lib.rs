@@ -19,4 +19,11 @@ pub mod flowscore{
 pub fn report_missed_payment(ctx: Context<ReportMissedPayment>, next_payout: i64) -> Result<()> {
     ctx.accounts.process(next_payout)
 }
+
+pub fn report_failed_payment(
+    ctx: Context<ReportFailedPayment>,
+    reason: FailureReason
+) -> Result<()> {
+    ctx.accounts.process(reason)
+}
 }
