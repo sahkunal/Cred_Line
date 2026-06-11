@@ -1,49 +1,31 @@
 use anchor_lang::prelude::*;
-use crate::state::{BadgeAccount, WorkerScoreAccount};
+use crate::state::BadgeAccount;
+use crate::state::tier::BadgeTier;
 use crate::errors::FlowBadgeError;
+use flowscore::cpi_exports::ScoreAccount;
+//use flowscore::ID as FLOWSCORE_ID;
 
-
-pub const TIER_BRONZE:   u32 = 400;
-pub const TIER_SILVER:   u32 = 600;
-pub const TIER_GOLD:     u32 = 800;
-pub const TIER_PLATINUM: u32 = 900;
-
-pub const FLOWPAY_PROGRAM_ID: Pubkey = anchor_lang::solana_program::system_program::ID;
-
-/// Derives the tier u8 from a composite score
-pub fn score_to_tier(composite: u32) -> u8 {
-    match composite {
-        s if s >= TIER_PLATINUM => 3, // Platinum
-        s if s >= TIER_GOLD     => 2, // Gold
-        s if s >= TIER_SILVER   => 1, // Silver
-        _                        => 0, // Bronze
-    }
-}
+// FlowScore program ID — for seeds::program constraint
+pub const FLOWSCORE_ID: Pubkey = anchor_lang::solana_program::system_program::ID; // replace on deploy
 
 #[derive(Accounts)]
 pub struct MintBadge<'info> {
-    #[account(
-        mut,
-        constraint = caller.key() == FLOWPAY_PROGRAM_ID
-            @ FlowBadgeError::UnauthorizedCaller
-    )]
-    pub caller: Signer<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,  // worker or keeper, anyone
 
-    pub worker: UncheckedAccount<'info>,
-
+    // Direct account read — NO CPI into FlowScore
     #[account(
-        seeds = [b"worker_score", worker.key().as_ref()],
-        bump  = worker_score.bump,
-        constraint = worker_score.authority == worker.key()
-            @ FlowBadgeError::ScoreAccountMismatch,
+        seeds = [b"score", authority.key().as_ref()],
+        bump  = score_account.bump,
+        seeds::program = FLOWSCORE_ID,
     )]
-    pub worker_score: Account<'info, WorkerScoreAccount>,
+    pub score_account: Account<'info, ScoreAccount>,
 
     #[account(
         init,
-        payer = caller,
+        payer = authority,
         space = 8 + BadgeAccount::INIT_SPACE,
-        seeds = [b"badge", worker.key().as_ref()],
+        seeds = [b"badge", authority.key().as_ref()],
         bump,
     )]
     pub badge_account: Account<'info, BadgeAccount>,
@@ -53,28 +35,31 @@ pub struct MintBadge<'info> {
 
 impl<'info> MintBadge<'info> {
     pub fn process(&mut self, bumps: &MintBadgeBumps) -> Result<()> {
+        // Score gate
         require!(
-            self.worker_score.composite >= TIER_BRONZE,
+            self.score_account.composite >= BadgeTier::Bronze.min_score(),
             FlowBadgeError::ScoreTooLow
         );
+        // init already enforces "badge doesn't exist yet" via init
 
-        // ── 2. Derive starting tier from current score 
-        let tier = score_to_tier(self.worker_score.composite);
+        let tier = BadgeTier::from_score(self.score_account.composite);
+        let now  = Clock::get()?.unix_timestamp;
 
-        
-        let now = Clock::get()?.unix_timestamp;
         let badge = &mut self.badge_account;
-        badge.authority       = self.worker.key();
-        badge.composite_score = self.worker_score.composite;
+        badge.authority       = self.authority.key();
+        badge.composite_score = self.score_account.composite;
         badge.total_contracts = 0;
         badge.total_earned    = 0;
         badge.member_since    = now;
-        badge.tier            = tier;
+        badge.tier           = tier as u8;
         badge.bump            = bumps.badge_account;
 
         msg!(
-            "Badge minted for {}. Tier: {} Composite: {}",
-            self.worker.key(), tier, self.worker_score.composite
+            "Badge minted for {}. Tier: {} | Composite: {} | Max borrow: {} USDC",
+            self.authority.key(),
+            tier.label(),
+            self.score_account.composite,
+            tier.max_borrow_usdc() / 1_000_000
         );
         Ok(())
     }

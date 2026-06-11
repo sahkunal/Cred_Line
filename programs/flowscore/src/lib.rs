@@ -27,3 +27,7 @@ pub fn report_failed_payment(
     ctx.accounts.process(reason)
 }
 }
+#[cfg(feature = "cpi")]
+pub mod cpi_exports {
+    pub use crate::state::ScoreAccount;
+}

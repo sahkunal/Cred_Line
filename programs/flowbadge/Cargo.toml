@@ -22,6 +22,8 @@ custom-panic = []
 [dependencies]
 anchor-lang = {version="0.32.1", features=["init-if-needed"]}
 anchor-spl="0.32.1"
+flowscore = { path = "../flowscore", features = ["cpi"] }
+
 
 [dev-dependencies]
 litesvm = "0.10.0"

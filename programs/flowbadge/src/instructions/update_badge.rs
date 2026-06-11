@@ -1,65 +1,57 @@
 use anchor_lang::prelude::*;
-use crate::state::{BadgeAccount, WorkerScoreAccount};
+use crate::state::BadgeAccount;
 use crate::errors::FlowBadgeError;
-use crate::instructions::mint_badge::score_to_tier;
+use crate::state::tier::BadgeTier;
+use flowscore::cpi_exports::ScoreAccount;
+use flowscore::ID as FLOWSCORE_ID;
 
 pub const FLOWSCORE_PROGRAM_ID: Pubkey = anchor_lang::solana_program::system_program::ID;
 
 #[derive(Accounts)]
 pub struct UpdateBadge<'info> {
-   
+    pub authority: Signer<'info>,  // worker or keeper, anyone
+
+    // Direct account read — NO CPI
     #[account(
-        constraint = caller.key() == FLOWSCORE_PROGRAM_ID
-            @ FlowBadgeError::UnauthorizedCaller
+        seeds = [b"score", authority.key().as_ref()],
+        bump  = score_account.bump,
+        seeds::program = FLOWSCORE_ID,
     )]
-    pub caller: Signer<'info>,
-
-    pub worker: UncheckedAccount<'info>,
-
-
-    #[account(
-        seeds = [b"worker_score", worker.key().as_ref()],
-        bump  = worker_score.bump,
-        constraint = worker_score.authority == worker.key()
-            @ FlowBadgeError::ScoreAccountMismatch,
-    )]
-    pub worker_score: Account<'info, WorkerScoreAccount>,
-
+    pub score_account: Account<'info, ScoreAccount>,
 
     #[account(
         mut,
-        seeds = [b"badge", worker.key().as_ref()],
+        seeds = [b"badge", authority.key().as_ref()],
         bump  = badge_account.bump,
-        constraint = badge_account.authority == worker.key()
+        constraint = badge_account.authority == authority.key()
             @ FlowBadgeError::ScoreAccountMismatch,
     )]
     pub badge_account: Account<'info, BadgeAccount>,
 
     pub system_program: Program<'info, System>,
 }
-
 impl<'info> UpdateBadge<'info> {
-    pub fn process(&mut self) -> Result<()> {
-        let new_composite = self.worker_score.composite;
-        let new_tier      = score_to_tier(new_composite);
-        let old_tier      = self.badge_account.tier;
+   pub fn process(&mut self) -> Result<()> {
+    let new_composite = self.score_account.composite;
+    //let new_tier = BadgeTier::from_score(new_composite);
+    //let old_tier = self.badge_account.tier;
+    let new_tier = BadgeTier::from_score(new_composite) as u8;
+    let old_tier = self.badge_account.tier;
+    
+    self.badge_account.composite_score = new_composite;
 
-        self.badge_account.composite_score = new_composite;
-
-
-        if new_tier > old_tier {
-            self.badge_account.tier = new_tier;
-            msg!(
-                "Badge upgraded for {}. Tier: {} → {} Composite: {}",
-                self.worker.key(), old_tier, new_tier, new_composite
-            );
-        } else {
-            msg!(
-                "Badge score synced for {}. Tier unchanged: {} Composite: {}",
-                self.worker.key(), old_tier, new_composite
-            );
-        }
-
-        Ok(())
+    if new_tier > old_tier {
+        self.badge_account.tier = new_tier;
+        msg!(
+            "Badge upgraded for {}. Tier: {:?} → {:?} Composite: {}",
+            self.authority.key(), old_tier, new_tier, new_composite
+        );
+    } else {
+        msg!(
+            "Badge score synced for {}. Tier unchanged: {:?} Composite: {}",
+            self.authority.key(), old_tier, new_composite
+        );
     }
+    Ok(())
+}
 }

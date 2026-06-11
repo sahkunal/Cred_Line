@@ -8,9 +8,6 @@ pub enum FlowBadgeError {
     #[msg("Badge already minted for this worker.")]
     BadgeAlreadyMinted,
 
-    #[msg("Unauthorized caller — only FlowPay or FlowScore may call this.")]
-    UnauthorizedCaller,
-
     #[msg("WorkerScoreAccount does not match the worker wallet.")]
     ScoreAccountMismatch,
 }

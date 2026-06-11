@@ -15,10 +15,12 @@ use instructions::{
 pub mod flowbadge{
     use super::*;
 
-    pub fn mint_badge(ctx: Context<MintBadge>)-> Result<()>{
-        ctx.accounts.process(&ctx.bumps)
-    }
-    pub fn update_badge(ctx: Context<UpdateBadge>)-> Result<()>{
-        ctx.accounts.process()
-    }
+  pub fn mint_badge(ctx: Context<MintBadge>) -> Result<()> {
+    ctx.accounts.process(&ctx.bumps)
+}
+
+pub fn update_badge(ctx: Context<UpdateBadge>) -> Result<()> {
+    ctx.accounts.process()
+}
+
 }

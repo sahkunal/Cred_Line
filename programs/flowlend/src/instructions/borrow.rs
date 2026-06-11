@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
-use crate::state::{LoanAccount, VaultAccount, LendingPool, WorkerScoreAccount};
+use crate::state::{LoanAccount, VaultAccount, LendingPool};
 use crate::errors::FlowLendError;
+use flowscore::state::ScoreAccount;
+use flowscore::ID as FLOWSCORE_ID;
 
 /// 30 days in seconds
 pub const LOAN_DURATION: i64 = 30 * 24 * 60 * 60;
@@ -11,12 +13,13 @@ pub struct Borrow<'info> {
     #[account(mut)]
     pub worker: Signer<'info>,
     #[account(
-        seeds = [b"worker_score", worker.key().as_ref()],
-        bump = worker_score.bump,
-        constraint = worker_score.authority == worker.key()
-            @ FlowLendError::ScoreTooLow,
-    )]
-    pub worker_score: Account<'info, WorkerScoreAccount>,
+    seeds = [b"score", worker.key().as_ref()],
+    bump  = worker_score.bump,
+    seeds::program = FLOWSCORE_ID,
+    constraint = worker_score.composite >= lending_pool.minimum_score
+        @ FlowLendError::ScoreTooLow,
+)]
+pub worker_score: Account<'info, ScoreAccount>,
 
     /// LendingPool — holds minimum_score and available_liquidity
     #[account(
