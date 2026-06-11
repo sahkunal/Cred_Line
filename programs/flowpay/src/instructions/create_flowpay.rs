@@ -1,7 +1,7 @@
 use std::ops::Mul;
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface, Approve, approve};
-use crate::state::{Flowpay, User, FLOWPAY_SIZE};
+use crate::state::{Flowpay, FLOWPAY_SIZE};
 
 #[derive(Accounts)]
 pub struct CreateFlowpay<'info> {
@@ -24,18 +24,8 @@ pub struct CreateFlowpay<'info> {
         space = FLOWPAY_SIZE
     )]
     pub flowpay: Account<'info, Flowpay>,
-    #[account(
-        mut,
-        seeds = [b"user", payer.key().as_ref()],
-        bump,
-    )]
-    pub payer_user: Account<'info, User>,
-    #[account(
-        mut,
-        seeds = [b"user", payee.key().as_ref()],
-        bump,
-    )]
-    pub payee_user: Account<'info, User>,
+
+
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
@@ -45,8 +35,6 @@ impl<'info> CreateFlowpay<'info> {
         &mut self,
         amount: u64,
         frequency: i64,
-        name: String,
-        description: String,
         bumps: &CreateFlowpayBumps,
     ) -> Result<()> {
         self.flowpay.set_inner(Flowpay {
@@ -58,8 +46,6 @@ impl<'info> CreateFlowpay<'info> {
             active: true,
             next_payout: Clock::get()?.unix_timestamp.wrapping_add(frequency),
             bump: bumps.flowpay,
-            name,
-            description,
             payment_count: 0,
         });
         Ok(())
@@ -76,23 +62,14 @@ impl<'info> CreateFlowpay<'info> {
         approve(cpi_ctx, self.flowpay.amount.mul(3))
     }
 
-    pub fn update_subscription_counts(&mut self) -> Result<()> {
-        self.payer_user.outgoing_subscriptions_count += 1;
-        self.payee_user.incoming_subscriptions_count += 1;
-        Ok(())
-    }
-
     pub fn process(
         &mut self,
         amount: u64,
         frequency: i64,
-        name: String,
-        description: String,
         bumps: &CreateFlowpayBumps,
     ) -> Result<()> {
-        self.init_flowpay(amount, frequency, name, description, bumps)?;
+        self.init_flowpay(amount, frequency, bumps)?;
         self.approve_delegate_authority()?;
-        self.update_subscription_counts()?;
         Ok(())
     }
 }

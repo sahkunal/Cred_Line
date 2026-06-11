@@ -1,7 +1,8 @@
+use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct LoanAccount {
-    pub borrower: Pubkey,
+    pub worker: Pubkey,
     pub amount: u64,
     pub due_date: i64,
     pub repaid: bool,

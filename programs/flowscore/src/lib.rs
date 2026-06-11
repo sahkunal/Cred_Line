@@ -1,18 +1,22 @@
 use anchor_lang::prelude::*;
 
-declare_id("zVkasAovzgieLuz3RYxk1bUqSevMN6QkHbBtrrweNKE");
+declare_id!("zVkasAovzgieLuz3RYxk1bUqSevMN6QkHbBtrrweNKE");
 pub mod instructions;
-pub mod error;
+pub mod errors;
 pub mod state;
 
 use instructions::{
-    update_score::*;
+    update_score::*,
 };
 
 #[program]
 pub mod flowscore{
     use super::*;
-    pub fn update_score(ctx: Context<UpdateScore>)-> Result<()>{
-        ctx.accounts.process()
-    }
+    pub fn update_score_on_payment(ctx: Context<UpdateScoreOnPayment>, amount: u64) -> Result<()> {
+    ctx.accounts.process(amount, &ctx.bumps)
+}
+
+pub fn report_missed_payment(ctx: Context<ReportMissedPayment>, next_payout: i64) -> Result<()> {
+    ctx.accounts.process(next_payout)
+}
 }

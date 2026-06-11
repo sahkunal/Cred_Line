@@ -1,7 +1,8 @@
+use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct PayHistory {
-    pub mandate: Pubkey,
+    pub flowpay: Pubkey,
     pub payer: Pubkey,
     pub payee: Pubkey,
     pub amount: u64,

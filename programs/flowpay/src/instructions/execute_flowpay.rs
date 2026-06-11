@@ -68,7 +68,9 @@ impl<'info> ExecuteFlowpay<'info> {
         transfer_checked(cpi_ctx, self.flowpay.amount, self.token.decimals)?;
 
         self.payment_history.set_inner(PayHistory {
-            mandate: self.flowpay.key(),
+             payer: self.payer.key(),
+            payee: self.payee.key(),
+            flowpay: self.flowpay.key(),
             amount: self.flowpay.amount,
             timestamp: now,
             payment_number: self.flowpay.payment_count,

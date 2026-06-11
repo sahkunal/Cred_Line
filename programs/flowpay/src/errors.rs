@@ -8,7 +8,7 @@ pub enum Error {
     #[msg("Only the payer or payee can perform this operation")]
     Unauthorized,
 
-    #[msg("Invalid payment history for this mandate")]
+    #[msg("Invalid payment history for this flowpay")]
     InvalidPaymentHistory,
 
     #[msg("The mandate is not active")]
