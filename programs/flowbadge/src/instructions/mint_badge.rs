@@ -3,13 +3,12 @@ use crate::state::BadgeAccount;
 use crate::state::tier::BadgeTier;
 use crate::errors::FlowBadgeError;
 use flowscore::exports::ScoreAccount;
-// FlowScore program ID — for seeds::program constraint
 pub const FLOWSCORE_ID: Pubkey = anchor_lang::solana_program::system_program::ID; // replace on deploy
 
 #[derive(Accounts)]
 pub struct MintBadge<'info> {
     #[account(mut)]
-    pub authority: Signer<'info>,  // worker or keeper, anyone
+    pub authority: Signer<'info>, 
 
     // Direct account read — NO CPI into FlowScore
     #[account(
@@ -33,7 +32,6 @@ pub struct MintBadge<'info> {
 
 impl<'info> MintBadge<'info> {
     pub fn process(&mut self, bumps: &MintBadgeBumps) -> Result<()> {
-        // Score gate
         require!(
             self.score_account.composite >= BadgeTier::Bronze.min_score(),
             FlowBadgeError::ScoreTooLow

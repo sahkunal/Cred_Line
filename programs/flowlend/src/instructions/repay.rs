@@ -12,8 +12,6 @@ pub struct Repay<'info> {
     #[account(mut)]
     pub worker: Signer<'info>,
 
-    /// LoanAccount — must belong to worker, must not be repaid yet
-    /// close = worker returns rent to worker on account close
     #[account(
         mut,
         seeds  = [b"loan", worker.key().as_ref()],
@@ -26,7 +24,6 @@ pub struct Repay<'info> {
     )]
     pub loan_account: Account<'info, LoanAccount>,
 
-    /// LendingPool — available_liquidity restored after repay
     #[account(
         mut,
         seeds = [b"lending_pool"],
@@ -34,7 +31,6 @@ pub struct Repay<'info> {
     )]
     pub lending_pool: Account<'info, LendingPool>,
 
-    /// VaultAccount — total_lent decremented after repay
     #[account(
         mut,
         seeds = [b"vault"],
@@ -42,7 +38,6 @@ pub struct Repay<'info> {
     )]
     pub vault_account: Account<'info, VaultAccount>,
 
-    /// Vault USDC token account — receives repayment
     #[account(
         mut,
         seeds = [b"vault_token"],
@@ -52,7 +47,6 @@ pub struct Repay<'info> {
     )]
     pub vault_token: Account<'info, TokenAccount>,
 
-    /// Worker USDC token account — sends repayment
     #[account(
         mut,
         token::mint      = usdc_mint,
@@ -83,13 +77,11 @@ pub struct Repay<'info> {
 impl<'info> Repay<'info> {
     pub fn process(&mut self, amount: u64) -> Result<()> {
 
-        // ── 1. Amount must match exactly ─────────────────────
         require!(
             amount == self.loan_account.amount,
             FlowLendError::RepayAmountMismatch
         );
 
-        // ── 2. Transfer USDC: worker → vault ─────────────────
         token::transfer(
             CpiContext::new(
                 self.token_program.to_account_info(),
@@ -102,7 +94,6 @@ impl<'info> Repay<'info> {
             amount,
         )?;
 
-        // ── 3. Restore pool liquidity and vault tracking ──────
         self.lending_pool.available_liquidity = self.lending_pool
             .available_liquidity
             .checked_add(amount)
@@ -112,15 +103,11 @@ impl<'info> Repay<'info> {
             .total_lent
             .saturating_sub(amount);
 
-       // ── 4. Determine if repaid on time ───────────────────
 let now = Clock::get()?.unix_timestamp;
 let on_time = now <= self.loan_account.due_date;
 
-// ── 5. Mark repaid before account closes ─────────────
 self.loan_account.repaid = true;
 
-// ── 6. CPI → FlowScore: update_score_on_repay ────────
-// precomputed: sha256("global:update_score_on_repay")[..8]
 let data_prefix: [u8; 8] = [0xfc, 0x30, 0x79, 0xca, 0x98, 0x74, 0x22, 0x9d];
 let mut data: Vec<u8> = data_prefix.to_vec();
 data.extend_from_slice(&[on_time as u8]);

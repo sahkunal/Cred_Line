@@ -9,7 +9,7 @@ pub const FLOWSCORE_PROGRAM_ID: Pubkey = anchor_lang::solana_program::system_pro
 
 #[derive(Accounts)]
 pub struct UpdateBadge<'info> {
-    pub authority: Signer<'info>,  // worker or keeper, anyone
+    pub authority: Signer<'info>, 
 
     // Direct account read — NO CPI
     #[account(

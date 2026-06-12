@@ -1,0 +1,18 @@
+block-buffer v0.12.1
+└── digest v0.11.3
+    └── blake3 v1.8.5
+        ├── solana-blake3-hasher v2.2.1
+        │   └── solana-program v2.3.0
+        │       └── spl-associated-token-account v7.0.0
+        │           └── anchor-spl v0.32.1
+        │               ├── flowbatch v0.1.0 (/home/tyler/cred_line/programs/flowbadge)
+        │               ├── flowlend v0.1.0 (/home/tyler/cred_line/programs/flowlend)
+        │               ├── flowpay v0.1.0 (/home/tyler/cred_line/programs/flowpay)
+        │               └── flowscore v0.1.0 (/home/tyler/cred_line/programs/flowscore)
+        │                   ├── flowbatch v0.1.0 (/home/tyler/cred_line/programs/flowbadge)
+        │                   └── flowlend v0.1.0 (/home/tyler/cred_line/programs/flowlend)
+        ├── solana-message v2.4.0
+        │   ├── solana-example-mocks v2.2.1
+        │   │   └── solana-program v2.3.0 (*)
+        │   └── solana-program v2.3.0 (*)
+        └── solana-program v2.3.0 (*)

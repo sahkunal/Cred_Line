@@ -99,27 +99,21 @@ data.extend(self.flowpay.amount.to_le_bytes());
 let ix = anchor_lang::solana_program::instruction::Instruction {
     program_id: self.flow_score_program.key(),
     accounts: vec![
-        // payer_signer — flowpay PDA signs
         anchor_lang::solana_program::instruction::AccountMeta::new(
             self.flowpay.key(), true
         ),
-        // payee (worker)
         anchor_lang::solana_program::instruction::AccountMeta::new_readonly(
             self.payee.key(), false
         ),
-        // payer_wallet (client)
         anchor_lang::solana_program::instruction::AccountMeta::new_readonly(
             self.payer.key(), false
         ),
-        // payee_score
         anchor_lang::solana_program::instruction::AccountMeta::new(
             self.payee_score.key(), false
         ),
-        // payer_score
         anchor_lang::solana_program::instruction::AccountMeta::new(
             self.payer_score.key(), false
         ),
-        // system_program
         anchor_lang::solana_program::instruction::AccountMeta::new_readonly(
             anchor_lang::solana_program::system_program::ID, false
         ),

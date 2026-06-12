@@ -30,7 +30,7 @@ pub struct ClosePaymentHistory<'info> {
 impl<'info> ClosePaymentHistory<'info> {
     pub fn process(&mut self) -> Result<()> {
         // The account will be automatically closed and rent returned to authority
-        // due to the "close = authority" constraint above
+        // due to the "close = authority" 
         Ok(())
     }
 }
