@@ -22,10 +22,10 @@ custom-panic = []
 [dependencies]
 anchor-lang = {version="0.32.1", features=["init-if-needed"]}
 anchor-spl="0.32.1"
-flowscore = { path = "../flowscore", features = ["exports"] }
+flowscore = { path = "../flowscore",default-features = false, features = ["exports"] }
 
 [dev-dependencies]
-litesvm = "0.10.0"
+# litesvm = "0.10.0"
 solana-message = "3.0.1"
 solana-transaction = "3.0.2"
 solana-signer = "3.0.0"

@@ -18,7 +18,7 @@ idl-build = ["anchor-lang/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []
-exports=[]
+exports = ["no-entrypoint"]
 
 
 
@@ -27,7 +27,7 @@ anchor-lang = {version="0.32.1", features=["init-if-needed"]}
 anchor-spl="0.32.1"
 
 [dev-dependencies]
-litesvm = "0.10.0"
+# litesvm = "0.10.0"
 solana-message = "3.0.1"
 solana-transaction = "3.0.2"
 solana-signer = "3.0.0"
