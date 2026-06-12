@@ -253,10 +253,10 @@ anchor test
 Programs must be deployed in dependency order:
 
 ```
-1. FlowScore    — no external dependencies
-2. FlowBadge    — depends on FlowScore (reads WorkerScoreAccount)
-3. FlowPay      — depends on FlowScore + FlowBadge (CPIs both)
-4. FlowLend     — depends on FlowScore (CPIs on repay)
+FlowScore  ← required by FlowPay and FlowLend
+FlowBadge  ← independent (reads score data or updates separately)
+FlowPay    ← CPI → FlowScore
+FlowLend   ← CPI → FlowScore
 ```
 
 ---
