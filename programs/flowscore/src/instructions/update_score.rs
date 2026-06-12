@@ -147,6 +147,40 @@ pub enum FailureReason {
     InsufficientFunds,
     RevokedDelegate,
 }
+#[derive(Accounts)]
+pub struct UpdateScoreOnRepay<'info> {
+    #[account(mut)]
+    pub caller: Signer<'info>, // FlowLend vault PDA signs this
+
+    /// CHECK: worker wallet
+    pub worker: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"score", worker.key().as_ref()],
+        bump = worker_score.bump,
+    )]
+    pub worker_score: Account<'info, ScoreAccount>,
+}
+
+impl<'info> UpdateScoreOnRepay<'info> {
+    pub fn process(&mut self, on_time: bool) -> Result<()> {
+        let now = Clock::get()?.unix_timestamp;
+
+        if on_time {
+            self.worker_score.payment_score += 15;   // repaid on time → +15
+        } else {
+            self.worker_score.default_penalty += 40; // defaulted → -40
+        }
+
+        self.worker_score.composite = recalculate(
+            self.worker_score.payment_score,
+            self.worker_score.default_penalty,
+        );
+        self.worker_score.last_updated = now;
+        Ok(())
+    }
+}
 
 
 fn recalculate(payment_score: u32, default_penalty: u32) -> u32 {

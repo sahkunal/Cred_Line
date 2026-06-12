@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use crate::state::BadgeAccount;
 use crate::errors::FlowBadgeError;
 use crate::state::tier::BadgeTier;
-use flowscore::cpi_exports::ScoreAccount;
+use flowscore::exports::ScoreAccount;
 use flowscore::ID as FLOWSCORE_ID;
 
 pub const FLOWSCORE_PROGRAM_ID: Pubkey = anchor_lang::solana_program::system_program::ID;

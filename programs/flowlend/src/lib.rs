@@ -6,7 +6,6 @@ declare_id!("5pLCnuGivTRnFW71V7TD8p4Hvssq45k8muBnDzrodt43");
 pub mod instructions;
 pub mod state;
 pub mod errors;
-pub mod types;
 
 use instructions::{
     borrow::*,

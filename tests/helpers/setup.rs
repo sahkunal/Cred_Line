@@ -1,25 +1,22 @@
-    // shared across all test files
-pub struct TestEnv {
-    pub svm: LiteSVM,
-    pub payer: Keypair,
-    pub client: Keypair,      // pays worker
-    pub worker: Keypair,      // receives payment
-    pub usdc_mint: Pubkey,
-    pub client_ata: Pubkey,
-    pub worker_ata: Pubkey,
+use anchor_lang::prelude::Pubkey;
+
+pub fn score_pda(wallet: &Pubkey, program_id: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[b"score", wallet.as_ref()],
+        program_id,
+    ).0
 }
 
-pub fn setup() -> TestEnv {
-    let mut svm = LiteSVM::new();
+pub fn badge_pda(wallet: &Pubkey, program_id: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[b"badge", wallet.as_ref()],
+        program_id,
+    ).0
+}
 
-    // load all four programs
-    svm.add_program_from_file(
-        flowpay::ID,
-        "../../target/deploy/flowpay.so"
-    );
-    svm.add_program_from_file(
-        flowscore::ID,
-        "../../target/deploy/flowscore.so"
-    );
-    // etc.
+pub fn loan_pda(wallet: &Pubkey, program_id: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[b"loan", wallet.as_ref()],
+        program_id,
+    ).0
 }

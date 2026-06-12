@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{LoanAccount, VaultAccount, LendingPool};
 use crate::errors::FlowLendError;
-use flowscore::state::ScoreAccount;
+use flowscore::exports::ScoreAccount;
 use flowscore::ID as FLOWSCORE_ID;
 
 /// 30 days in seconds

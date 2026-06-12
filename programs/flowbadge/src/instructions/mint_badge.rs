@@ -2,9 +2,7 @@ use anchor_lang::prelude::*;
 use crate::state::BadgeAccount;
 use crate::state::tier::BadgeTier;
 use crate::errors::FlowBadgeError;
-use flowscore::cpi_exports::ScoreAccount;
-//use flowscore::ID as FLOWSCORE_ID;
-
+use flowscore::exports::ScoreAccount;
 // FlowScore program ID — for seeds::program constraint
 pub const FLOWSCORE_ID: Pubkey = anchor_lang::solana_program::system_program::ID; // replace on deploy
 

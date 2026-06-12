@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{LoanAccount, VaultAccount, LendingPool};
 use crate::errors::FlowLendError;
-use crate::types::LoanEvent;
 use anchor_lang::solana_program::system_program;
 
 
@@ -113,65 +112,52 @@ impl<'info> Repay<'info> {
             .total_lent
             .saturating_sub(amount);
 
-        // ── 4. Determine loan event based on due_date ─────────
-        // Clock check: on time = RepaidOnTime, late = Defaulted
-        let now = Clock::get()?.unix_timestamp;
-        let loan_event = if now <= self.loan_account.due_date {
-            LoanEvent::RepaidOnTime
-        } else {
-            LoanEvent::Defaulted
-        };
+       // ── 4. Determine if repaid on time ───────────────────
+let now = Clock::get()?.unix_timestamp;
+let on_time = now <= self.loan_account.due_date;
 
-        // ── 5. Mark repaid before account closes ─────────────
-        self.loan_account.repaid = true;
+// ── 5. Mark repaid before account closes ─────────────
+self.loan_account.repaid = true;
 
-        // ── 6. CPI → FlowScore: process_loan(loan_event) ─────
-// ── 6. CPI → FlowScore: process_loan(loan_event) ─────
-use sha2::{Digest, Sha256};
-let mut hasher = Sha256::new();
-hasher.update(b"global:process_loan");
-let result = hasher.finalize();
-let mut data: Vec<u8> = result[..8].to_vec();
-data.extend(loan_event.try_to_vec()?);
+// ── 6. CPI → FlowScore: update_score_on_repay ────────
+// precomputed: sha256("global:update_score_on_repay")[..8]
+let data_prefix: [u8; 8] = [0xfc, 0x30, 0x79, 0xca, 0x98, 0x74, 0x22, 0x9d];
+let mut data: Vec<u8> = data_prefix.to_vec();
+data.extend_from_slice(&[on_time as u8]);
 
 let ix = anchor_lang::solana_program::instruction::Instruction {
     program_id: self.flow_score_program.key(),
     accounts: vec![
         anchor_lang::solana_program::instruction::AccountMeta::new(
-            self.worker_score.key(), false
+            self.vault_account.key(), true
         ),
         anchor_lang::solana_program::instruction::AccountMeta::new_readonly(
-            self.worker.key(), true
+            self.worker.key(), false
+        ),
+        anchor_lang::solana_program::instruction::AccountMeta::new(
+            self.worker_score.key(), false
         ),
     ],
     data,
 };
 
-anchor_lang::solana_program::program::invoke(
+let vault_seeds: &[&[u8]] = &[b"vault", &[self.vault_account.bump]];
+anchor_lang::solana_program::program::invoke_signed(
     &ix,
     &[
-        self.worker_score.to_account_info(),
+        self.vault_account.to_account_info(),
         self.worker.to_account_info(),
+        self.worker_score.to_account_info(),
         self.flow_score_program.to_account_info(),
     ],
+    &[vault_seeds],
 )?;
 
-        anchor_lang::solana_program::program::invoke(
-            &ix,
-            &[
-                self.worker_score.to_account_info(),
-                self.worker.to_account_info(),
-                self.flow_score_program.to_account_info(),
-            ],
-        )?;
+msg!(
+    "Loan of {} USDC repaid by {}. On time: {}",
+    amount, self.worker.key(), on_time
+);
 
-        msg!(
-            "Loan of {} USDC repaid by {}. Event: {:?}",
-            amount, self.worker.key(), loan_event
-        );
-
-        // LoanAccount closed by Anchor via `close = worker`
-        // rent automatically returned to worker wallet
-        Ok(())
+Ok(())
     }
 }
