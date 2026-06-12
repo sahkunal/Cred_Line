@@ -82,34 +82,108 @@ Emergency USDC lending, gated by reputation. Workers with a composite score abov
 - `repay` — returns USDC to vault, closes LoanAccount, CPIs into FlowScore with `RepaidOnTime` or `Defaulted`
 
 ---
-
 ## Program Architecture
 
-```
+```text
 flowpay/
-  ├── create_flowpay.rs             — contract init + SPL delegate approval
-  ├── execute_flowpay.rs            — interval payment + CPI to FlowScore + CPI to FlowBadge
-  ├── cancel_flowpay.rs             — contract teardown
-  ├──close_payment_history.rs       — close after the work is done
-  └──reapprove_flowpay.rs           — helps to reapprove the payment     
+
+├── instructions/
+│   ├── create_flowpay.rs
+│   │   └── Create payment agreement & approve SPL token spending
+│   │
+│   ├── execute_flowpay.rs
+│   │   └── Execute installment payment
+│   │       ├── Transfer funds
+│   │       ├── CPI → FlowScore
+│   │       └── CPI → FlowBadge
+│   │
+│   ├── reapprove_flowpay.rs
+│   │   └── Renew token spending approval
+│   │
+│   ├── cancel_flowpay.rs
+│   │   └── Cancel active payment agreement
+│   │
+│   └── close_payment_history.rs
+│       └── Close completed payment history account
+│
+└── state/
+    ├── flowpay.rs
+    │   └── Payment contract state
+    │
+    └── pay_history.rs
+        └── Payment execution records
+
 
 flowscore/
-  ├── update_score.rs       — payment and loan event processing
-  └── state/
-      ├── worker_score.rs   — WorkerScoreAccount (composite, penalties, bonuses)
-      └── client_score.rs   — ClientScoreAccount (payment history, penalties)
+
+├── instructions/
+│   ├── state.rs
+│   │   └── Initialize score accounts
+│   │
+│   └── update_score.rs
+│       └── Process payment & lending events
+│
+└── state/
+    └── score.rs
+        └── ScoreAccount
+            ├── payment_score
+            ├── default_penalty
+            ├── composite_score
+            ├── total_contracts
+            ├── total_earned
+            └── kyc_verified
+
 
 flowbadge/
-  ├── mint_badge.rs         — soulbound badge creation (CPI from FlowPay)
-  └── update_badge.rs       — tier upgrade (CPI from FlowScore)
+
+├── instructions/
+│   ├── mint_badge.rs
+│   │   └── Mint reputation badge
+│   │       └── Triggered by FlowPay activity
+│   │
+│   └── update_badge.rs
+│       └── Upgrade badge tier
+│
+└── state/
+    ├── badge.rs
+    │   └── BadgeAccount
+    │
+    ├── score.rs
+    │   └── Score reference for eligibility
+    │
+    └── tier.rs
+        └── Bronze → Silver → Gold → Platinum → Diamond
+
 
 flowlend/
-  ├── borrow.rs             — score check + USDC disbursement
-  ├── repay.rs              — repayment + CPI to FlowScore
-  └── state/
-      ├── loan.rs           — LoanAccount (amount, due_date, repaid)
-      ├── vault.rs          — VaultAccount (total_deposited, total_lent)
-      └── pool.rs           — LendingPool (minimum_score, available_liquidity)
+
+├── instructions/
+│   ├── borrow.rs
+│   │   └── Score validation + loan disbursement
+│   │
+│   └── repay.rs
+│       └── Loan repayment
+│           └── CPI → FlowScore
+│
+└── state/
+    ├── loan.rs
+    │   └── LoanAccount
+    │       ├── amount
+    │       ├── due_date
+    │       └── repaid
+    │
+    ├── vault.rs
+    │   └── VaultAccount
+    │       ├── total_deposited
+    │       └── total_lent
+    │
+    ├── pool.rs
+    │   └── LendingPool
+    │       ├── minimum_score
+    │       └── available_liquidity
+    │
+    └── score.rs
+        └── Credit score reference
 ```
 
 ---
