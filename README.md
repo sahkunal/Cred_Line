@@ -87,9 +87,11 @@ Emergency USDC lending, gated by reputation. Workers with a composite score abov
 
 ```
 flowpay/
-  ├── create_flowpay.rs     — contract init + SPL delegate approval
-  ├── execute_flowpay.rs    — interval payment + CPI to FlowScore + CPI to FlowBadge
-  └── cancel_flowpay.rs     — contract teardown
+  ├── create_flowpay.rs             — contract init + SPL delegate approval
+  ├── execute_flowpay.rs            — interval payment + CPI to FlowScore + CPI to FlowBadge
+  ├── cancel_flowpay.rs             — contract teardown
+  ├──close_payment_history.rs       — close after the work is done
+  └──reapprove_flowpay.rs           — helps to reapprove the payment     
 
 flowscore/
   ├── update_score.rs       — payment and loan event processing
