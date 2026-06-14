@@ -1,15 +1,22 @@
-use anchor_lang::prelude::*;
 use litesvm::LiteSvm;
 use solana_keypair::Keypair;
-use solana_message::Message;
+use solana_signer::Signer;
 use solana_transaction::Transaction;
 
+#[path = "helpers/mod.rs"]
 mod helpers;
 use helpers::*;
 
+/// Spin up a fresh LiteSVM with the FlowScore program loaded.
+fn setup() -> LiteSvm {
+    let mut svm = LiteSvm::new();
+    load_program(&mut svm, &flowscore::ID, "flowscore");
+    svm
+}
+
 #[test]
 fn test_update_score_on_payment() {
-    let mut svm = LiteSvm::new();
+    let mut svm = setup();
     let payer = Keypair::new();
     let payee = Keypair::new();
     let payer_wallet = Keypair::new();
@@ -17,14 +24,8 @@ fn test_update_score_on_payment() {
     svm.airdrop(&payer.pubkey(), 10_000_000_000).unwrap();
 
     // derive PDAs
-    let (payee_score, _) = Pubkey::find_program_address(
-        &[b"score", payee.pubkey().as_ref()],
-        &flowscore::ID,
-    );
-    let (payer_score, _) = Pubkey::find_program_address(
-        &[b"score", payer_wallet.pubkey().as_ref()],
-        &flowscore::ID,
-    );
+    let payee_score = score_pda(&payee.pubkey(), &flowscore::ID);
+    let payer_score = score_pda(&payer_wallet.pubkey(), &flowscore::ID);
 
     // build ix
     let ix = flowscore::instruction::update_score_on_payment(
@@ -53,21 +54,25 @@ fn test_update_score_on_payment() {
     assert_eq!(payee_score_acc.payment_score, 10);
     assert_eq!(payee_score_acc.composite, 510); // 500 + 10
     assert_eq!(payee_score_acc.total_contracts, 1);
+    assert_eq!(payee_score_acc.total_earned, 1_000_000);
+
+    // verify payer score account — also bumped on a successful payment
+    let payer_score_acc: flowscore::exports::ScoreAccount =
+        svm.get_account_data_as(&payer_score).unwrap();
+    assert_eq!(payer_score_acc.payment_score, 10);
+    assert_eq!(payer_score_acc.composite, 510); // 500 + 10
 }
 
 #[test]
 fn test_report_missed_payment_too_early() {
-    let mut svm = LiteSvm::new();
+    let mut svm = setup();
     let reporter = Keypair::new();
     let flowpay = Keypair::new();
     let payer_wallet = Keypair::new();
 
     svm.airdrop(&reporter.pubkey(), 10_000_000_000).unwrap();
 
-    let (payer_score, _) = Pubkey::find_program_address(
-        &[b"score", payer_wallet.pubkey().as_ref()],
-        &flowscore::ID,
-    );
+    let payer_score = score_pda(&payer_wallet.pubkey(), &flowscore::ID);
 
     // next_payout is in the future — should fail
     let future_payout = i64::MAX;
@@ -93,16 +98,13 @@ fn test_report_missed_payment_too_early() {
 
 #[test]
 fn test_report_failed_payment_insufficient_funds() {
-    let mut svm = LiteSvm::new();
+    let mut svm = setup();
     let caller = Keypair::new();
     let payer_wallet = Keypair::new();
 
     svm.airdrop(&caller.pubkey(), 10_000_000_000).unwrap();
 
-    let (payer_score, _) = Pubkey::find_program_address(
-        &[b"score", payer_wallet.pubkey().as_ref()],
-        &flowscore::ID,
-    );
+    let payer_score = score_pda(&payer_wallet.pubkey(), &flowscore::ID);
 
     let ix = flowscore::instruction::report_failed_payment(
         flowscore::ID,
@@ -130,16 +132,13 @@ fn test_report_failed_payment_insufficient_funds() {
 
 #[test]
 fn test_update_score_on_repay_on_time() {
-    let mut svm = LiteSvm::new();
+    let mut svm = setup();
     let caller = Keypair::new();
     let worker = Keypair::new();
 
     svm.airdrop(&caller.pubkey(), 10_000_000_000).unwrap();
 
-    let (worker_score, _) = Pubkey::find_program_address(
-        &[b"score", worker.pubkey().as_ref()],
-        &flowscore::ID,
-    );
+    let worker_score = score_pda(&worker.pubkey(), &flowscore::ID);
 
     let ix = flowscore::instruction::update_score_on_repay(
         flowscore::ID,

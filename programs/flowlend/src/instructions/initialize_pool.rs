@@ -1,0 +1,61 @@
+// programs/flowlend/src/instructions/initialize_pool.rs
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount, Mint};
+use crate::state::{LendingPool, VaultAccount};
+
+#[derive(Accounts)]
+pub struct InitializePool<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + LendingPool::INIT_SPACE,
+        seeds = [b"lending_pool"],
+        bump,
+    )]
+    pub lending_pool: Account<'info, LendingPool>,
+
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + VaultAccount::INIT_SPACE,
+        seeds = [b"vault"],
+        bump,
+    )]
+    pub vault_account: Account<'info, VaultAccount>,
+
+    #[account(
+        init,
+        payer = authority,
+        seeds = [b"vault_token"],
+        bump,
+        token::mint = usdc_mint,
+        token::authority = vault_account,
+    )]
+    pub vault_token: Account<'info, TokenAccount>,
+
+    pub usdc_mint: Account<'info, Mint>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info> InitializePool<'info> {
+    pub fn process(&mut self, minimum_score: u32, bumps: &InitializePoolBumps) -> Result<()> {
+        self.lending_pool.set_inner(LendingPool {
+            authority: self.authority.key(),
+            total_deposits: 0,
+            available_liquidity: 0,
+            minimum_score,
+            bump: bumps.lending_pool,
+        });
+        self.vault_account.set_inner(VaultAccount {
+            total_deposited: 0,
+            total_lent: 0,
+            bump: bumps.vault_account,
+        });
+        Ok(())
+    }
+}

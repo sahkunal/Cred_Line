@@ -10,6 +10,7 @@ pub mod errors;
 use instructions::{
     borrow::*,
     repay::*,
+    initialize_pool::*,
 };
 
 #[program]
@@ -21,5 +22,8 @@ pub mod flowlend {
     }
     pub fn repay(ctx: Context<Repay>, amount: u64) -> Result<()> {
         ctx.accounts.process(amount)
+    }
+    pub fn initialize_pool( ctx: Context<InitializePool>,minimum_score: u32) -> Result<()> {
+        ctx.accounts.process(minimum_score, &ctx.bumps)
     }
 }

@@ -9,11 +9,20 @@ flowscore = { path = "../programs/flowscore", features = ["exports"] }
 flowbadge = { path = "../programs/flowbadge" }
 flowlend = { path = "../programs/flowlend" }
 
-anchor-lang = "0.32.1"
+anchor-lang = "0.31.1"
 
 [dev-dependencies]
 litesvm = "0.10.0"
+litesvm-token = "0.10.0"
 solana-keypair = "^3.0.1"
+solana-signer = "^3.0.1"
+solana-message = "^3.0.1"
+solana-transaction = "^3.0.1"
+solana-sdk-ids = "^3.0.1"
+solana-pubkey = "^3.0.1"
+spl-token = "^7"
+spl-associated-token-account = "^6"
+spl-program-option = "^0.6"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
