@@ -5,8 +5,6 @@ use crate::state::tier::BadgeTier;
 use flowscore::exports::ScoreAccount;
 use flowscore::ID as FLOWSCORE_ID;
 
-pub const FLOWSCORE_PROGRAM_ID: Pubkey = anchor_lang::solana_program::system_program::ID;
-
 #[derive(Accounts)]
 pub struct UpdateBadge<'info> {
     pub authority: Signer<'info>, 

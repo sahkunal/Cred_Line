@@ -2,10 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{LoanAccount, VaultAccount, LendingPool};
 use crate::errors::FlowLendError;
-use anchor_lang::solana_program::system_program;
-
-
-pub const FLOW_SCORE_PROGRAM_ID: Pubkey = system_program::ID;
+use flowscore::ID as FLOW_SCORE_PROGRAM_ID;
 
 #[derive(Accounts)]
 pub struct Repay<'info> {

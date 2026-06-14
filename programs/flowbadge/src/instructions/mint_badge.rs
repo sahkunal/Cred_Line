@@ -3,7 +3,7 @@ use crate::state::BadgeAccount;
 use crate::state::tier::BadgeTier;
 use crate::errors::FlowBadgeError;
 use flowscore::exports::ScoreAccount;
-pub const FLOWSCORE_ID: Pubkey = anchor_lang::solana_program::system_program::ID; // replace on deploy
+use flowscore::ID as FLOWSCORE_ID;
 
 #[derive(Accounts)]
 pub struct MintBadge<'info> {
