@@ -212,6 +212,17 @@ cargo test -- --nocapture
 ```
 
 ---
+## Devnet Deployment
+
+| Program   | Program ID                                     | Deployment Transaction                                                                     |
+| --------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| FlowPay   | `3Sdo2Uf816kQ2ue5akczvnywBxxYRnhe85zoHqi8YnHK` | `3AaPQrDtYhf5gWBvLrAjDuHqpZSTjh6BJVpboSnKNcCp44KjjhPwCLowGKMmi6KtrAk131vQtTCD1xcgnLxBCbnG` |
+| FlowScore | `BGnsrKSkgDvrhqFgcgh7LYzMaGUuux9KLxW38NXMaeMY` | `3VarDkFViLzQUkx9hFypma3HbA7U512EoyCQJzbagJvTLuhf3k7osbP3F2dsRgN8ixyHonDjtGvkB9TqFJ8Ss2Ni` |
+| FlowBadge | `9dvHFYb1gz3ebxqLXo2h42XLQt314dR29m646hdNCQp4` | `4GzTqmyg5gvaxAeQzGomWzWhsbUNUD2NGkzMTQkfqMxmVBup46nf2MHEnALBh439JuCBKNvcTm7EkbukSi3Mg9Gj` |
+| FlowLend  | `wiSgdztdU5SMzDWpBPT6UrV4c4i2kW391h55Ct2QDwh`  | `aaCCY7vpvPWaaYnMEnmr4ASW5bHrUwg4Ehi6vrWkkNZgcKuPYxRzGswNVS1t1ajfsyJVk2k63ycXHjCrrqg16Pj`  |
+
+**Deployment Status:** ✅ All programs successfully deployed to Solana Devnet.
+
 
 ## What's Next
 
