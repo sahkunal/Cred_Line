@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{ Mint, TokenAccount, TokenInterface, TransferChecked, transfer_checked};
 use crate::state::{LoanAccount, VaultAccount, LendingPool};
 use crate::errors::FlowLendError;
 use flowscore::exports::ScoreAccount;
@@ -44,7 +44,7 @@ pub worker_score: Account<'info, ScoreAccount>,
         token::mint  = usdc_mint,
         token::authority = vault_account,
     )]
-    pub vault_token: Account<'info, TokenAccount>,
+    pub vault_token: InterfaceAccount<'info, TokenAccount>,
 
     /// Worker's USDC token account — receives the loan
     #[account(
@@ -52,7 +52,7 @@ pub worker_score: Account<'info, ScoreAccount>,
         token::mint      = usdc_mint,
         token::authority = worker,
     )]
-    pub worker_token: Account<'info, TokenAccount>,
+    pub worker_token: InterfaceAccount<'info, TokenAccount>,
 
     /// LoanAccount PDA — created fresh on every borrow
     /// Seeds: ["loan", worker] — one loan per worker at a time
@@ -66,9 +66,9 @@ pub worker_score: Account<'info, ScoreAccount>,
     pub loan_account: Account<'info, LoanAccount>,
 
     /// CHECK: USDC mint — verified via token account constraints above
-    pub usdc_mint: UncheckedAccount<'info>,
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
 
-    pub token_program:  Program<'info, Token>,
+pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -91,18 +91,20 @@ impl<'info> Borrow<'info> {
         let vault_seeds: &[&[u8]] = &[b"vault", &[self.vault_account.bump]];
         let signer_seeds = &[vault_seeds];
 
-        token::transfer(
-            CpiContext::new_with_signer(
-                self.token_program.to_account_info(),
-                Transfer {
-                    from:      self.vault_token.to_account_info(),
-                    to:        self.worker_token.to_account_info(),
-                    authority: self.vault_account.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            amount,
-        )?;
+    transfer_checked(
+    CpiContext::new_with_signer(
+        self.token_program.to_account_info(),
+        TransferChecked {
+            from:      self.vault_token.to_account_info(),
+            to:        self.worker_token.to_account_info(),
+            authority: self.vault_account.to_account_info(),
+            mint:      self.usdc_mint.to_account_info(),
+        },
+        signer_seeds,
+    ),
+    amount,
+    self.usdc_mint.decimals,
+)?;
 
         // Initialize LoanAccount 
         // Fields match loan.rs exactly: worker, amount, due_date, repaid, bump

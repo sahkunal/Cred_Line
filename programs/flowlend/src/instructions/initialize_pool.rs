@@ -1,6 +1,6 @@
 // programs/flowlend/src/instructions/initialize_pool.rs
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Mint};
+use anchor_spl::token_interface::{TokenInterface, TokenAccount, Mint};
 use crate::state::{LendingPool, VaultAccount};
 
 #[derive(Accounts)]
@@ -33,12 +33,13 @@ pub struct InitializePool<'info> {
         bump,
         token::mint = usdc_mint,
         token::authority = vault_account,
+        token::token_program = token_program,
     )]
-    pub vault_token: Account<'info, TokenAccount>,
+    pub vault_token: InterfaceAccount<'info, TokenAccount>,
 
-    pub usdc_mint: Account<'info, Mint>,
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 

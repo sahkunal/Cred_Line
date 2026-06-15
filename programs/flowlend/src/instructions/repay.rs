@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface, TransferChecked, transfer_checked};
 use crate::state::{LoanAccount, VaultAccount, LendingPool};
 use crate::errors::FlowLendError;
 use flowscore::ID as FLOW_SCORE_PROGRAM_ID;
@@ -42,14 +42,14 @@ pub struct Repay<'info> {
         token::mint      = usdc_mint,
         token::authority = vault_account,
     )]
-    pub vault_token: Account<'info, TokenAccount>,
+    pub vault_token: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
         token::mint      = usdc_mint,
         token::authority = worker,
     )]
-    pub worker_token: Account<'info, TokenAccount>,
+    pub worker_token: InterfaceAccount<'info, TokenAccount>,
 
     /// WorkerScoreAccount — passed to FlowScore CPI
     /// CHECK: FlowScore program validates this account
@@ -65,9 +65,9 @@ pub struct Repay<'info> {
     pub flow_score_program: UncheckedAccount<'info>,
 
     /// CHECK: USDC mint
-    pub usdc_mint: UncheckedAccount<'info>,
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
 
-    pub token_program:  Program<'info, Token>,
+    pub token_program:  Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -79,17 +79,19 @@ impl<'info> Repay<'info> {
             FlowLendError::RepayAmountMismatch
         );
 
-        token::transfer(
-            CpiContext::new(
-                self.token_program.to_account_info(),
-                Transfer {
-                    from:      self.worker_token.to_account_info(),
-                    to:        self.vault_token.to_account_info(),
-                    authority: self.worker.to_account_info(),
-                },
-            ),
-            amount,
-        )?;
+        transfer_checked(
+    CpiContext::new(
+        self.token_program.to_account_info(),
+        TransferChecked {
+            from:      self.worker_token.to_account_info(),
+            to:        self.vault_token.to_account_info(),
+            authority: self.worker.to_account_info(),
+            mint:      self.usdc_mint.to_account_info(),
+        },
+    ),
+    amount,
+    self.usdc_mint.decimals,
+)?;
 
         self.lending_pool.available_liquidity = self.lending_pool
             .available_liquidity
