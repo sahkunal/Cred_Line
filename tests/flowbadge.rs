@@ -7,12 +7,6 @@ use solana_transaction::Transaction;
 mod helpers;
 use helpers::*;
 
-/// Spin up a fresh LiteSVM with FlowBadge + FlowScore loaded.
-///
-/// mint_badge / update_badge read FlowScore's ScoreAccount directly via
-/// `seeds::program = flowscore::ID` (no CPI), but the account must still
-/// exist and be owned by the FlowScore program for the seeds::program
-/// constraint to pass — so FlowScore must be loaded too.
 fn setup() -> LiteSvm {
     let mut svm = LiteSvm::new();
     load_program(&mut svm, &flowbadge::ID, "flowbadge");
@@ -26,10 +20,6 @@ fn test_mint_badge_score_too_low() {
     let authority = Keypair::new();
     svm.airdrop(&authority.pubkey(), 10_000_000_000).unwrap();
 
-    // ScoreAccount for `authority` was never created by FlowScore, so the
-    // `score_account: Account<'info, ScoreAccount>` deserialization itself
-    // should fail (account doesn't exist / wrong owner) before the
-    // ScoreTooLow check is even reached. Either way, mint_badge must fail.
     let score_account = score_pda(&authority.pubkey(), &flowscore::ID);
     let badge_account = badge_pda(&authority.pubkey(), &flowbadge::ID);
 
@@ -57,18 +47,14 @@ fn test_mint_badge_happy_path_bronze() {
     let mut svm = setup();
     let authority = Keypair::new();
     svm.airdrop(&authority.pubkey(), 10_000_000_000).unwrap();
-
-    // Bootstrap a ScoreAccount via FlowScore's update_score_on_payment.
-    // This brings `authority`'s composite to 510 (>= Bronze's 400),
-    // mirroring a worker who has been paid once via FlowPay.
     let payer_wallet = Keypair::new();
     let score_account = score_pda(&authority.pubkey(), &flowscore::ID);
     let payer_score = score_pda(&payer_wallet.pubkey(), &flowscore::ID);
 
     let bootstrap_ix = flowscore::instruction::update_score_on_payment(
         flowscore::ID,
-        authority.pubkey(), // payer_signer (just needs to sign + pay rent here)
-        authority.pubkey(), // payee — the wallet whose score we're bootstrapping
+        authority.pubkey(), 
+        authority.pubkey(), 
         payer_wallet.pubkey(),
         score_account,
         payer_score,
@@ -82,7 +68,6 @@ fn test_mint_badge_happy_path_bronze() {
     );
     svm.send_transaction(bootstrap_tx).unwrap();
 
-    // composite should now be 510 — confirm before minting
     let score_acc: flowscore::exports::ScoreAccount =
         svm.get_account_data_as(&score_account).unwrap();
     assert_eq!(score_acc.composite, 510);
@@ -156,9 +141,7 @@ fn test_update_badge_tier_upgrade() {
     );
     svm.send_transaction(mint_tx).unwrap();
 
-    // Push composite from 510 -> 520 -> ... repeatedly via
-    // update_score_on_payment until it crosses 600 (Silver threshold).
-    // +10 per call; need 9 more calls to go from 510 to 600.
+
     for _ in 0..9 {
         let ix = flowscore::instruction::update_score_on_payment(
             flowscore::ID,

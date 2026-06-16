@@ -21,15 +21,7 @@ fn test_borrow_score_too_low() {
     let worker = Keypair::new();
     svm.airdrop(&worker.pubkey(), 10_000_000_000).unwrap();
 
-    // worker_score has `seeds::program = flowscore::ID` and the
-    // ScoreAccount for `worker` does not exist — Borrow's account
-    // validation (deserializing worker_score as Account<ScoreAccount>)
-    // should fail before the explicit ScoreTooLow `require!` is reached.
-    //
-    // NOTE: this means `borrow` fails for the *same reason* regardless of
-    // whether the LendingPool/VaultAccount/token accounts exist — so this
-    // test deliberately does NOT set those up, and does not assert on the
-    // specific error code, only that the transaction errors.
+   
     let worker_score = score_pda(&worker.pubkey(), &flowscore::ID);
     let lending_pool = lending_pool_pda(&flowlend::ID);
     let vault_account = vault_pda(&flowlend::ID);
@@ -43,9 +35,7 @@ fn test_borrow_score_too_low() {
         lending_pool,
         vault_account,
         vault_token,
-        // worker_token / usdc_mint: deliberately pass placeholder pubkeys.
-        // The worker_score account constraint fires first (account does
-        // not exist), so execution never reaches token account checks.
+
         solana_pubkey::Pubkey::new_unique(),
         loan_account,
         solana_pubkey::Pubkey::new_unique(),
