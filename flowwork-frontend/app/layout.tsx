@@ -25,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FlowWork — Your work is your credit history",
+  title: "CredLine — Your work is your credit history",
   description:
     "On-chain payroll and reputation for gig workers and cross-border freelancers, built on Solana.",
 };

@@ -24,7 +24,7 @@ export function Navbar() {
           href="/"
           className="font-display text-lg font-bold tracking-tight text-foreground shrink-0"
         >
-          Flow<span className="text-gradient">Work</span>
+          Cred<span className="text-gradient">Line</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">

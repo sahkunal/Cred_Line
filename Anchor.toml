@@ -5,6 +5,7 @@ solana_version = "2.1.0"
 
 [features]
 resolution = true
+seeds = false
 skip-lint = false
 
 [programs.devnet]
@@ -18,7 +19,10 @@ cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "cargo test"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[registry]
+url = "https://api.apr.dev"
 
 [hooks]
 
