@@ -44,19 +44,19 @@ pub struct InitializePool<'info> {
 }
 
 impl<'info> InitializePool<'info> {
-    pub fn process(&mut self, minimum_score: u32, bumps: &InitializePoolBumps) -> Result<()> {
-        self.lending_pool.set_inner(LendingPool {
-            authority: self.authority.key(),
-            total_deposits: 0,
-            available_liquidity: 0,
-            minimum_score,
-            bump: bumps.lending_pool,
-        });
-        self.vault_account.set_inner(VaultAccount {
-            total_deposited: 0,
-            total_lent: 0,
-            bump: bumps.vault_account,
-        });
-        Ok(())
-    }
+   pub fn process(&mut self, minimum_score: u32, initial_liquidity: u64, bumps: &InitializePoolBumps) -> Result<()> {
+    self.lending_pool.set_inner(LendingPool {
+        authority: self.authority.key(),
+        total_deposits: initial_liquidity,
+        available_liquidity: initial_liquidity,
+        minimum_score,
+        bump: bumps.lending_pool,
+    });
+    self.vault_account.set_inner(VaultAccount {
+        total_deposited: initial_liquidity,
+        total_lent: 0,
+        bump: bumps.vault_account,
+    });
+    Ok(())
+}
 }

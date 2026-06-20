@@ -83,7 +83,7 @@ impl<'info> Borrow<'info> {
         // Pool liquidity check 
         // Use LendingPool.available_liquidity, not vault token balance
         require!(
-            self.lending_pool.available_liquidity >= amount,
+            self.vault_token.amount >= amount,
             FlowLendError::InsufficientLiquidity
         );
 

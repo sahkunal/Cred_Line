@@ -1,7 +1,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("Egw3ax73PVz2BcWejskqUTKKyKyvAWEJS4F2xCnfzgmq");
+declare_id!("2ftLyg3WpPoLdbRT1Hdy2gYGeizspERPkyR3rKxJA3Kc");
 
 pub mod instructions;
 pub mod state;
@@ -23,7 +23,7 @@ pub mod flowlend {
     pub fn repay(ctx: Context<Repay>, amount: u64) -> Result<()> {
         ctx.accounts.process(amount)
     }
-    pub fn initialize_pool( ctx: Context<InitializePool>,minimum_score: u32) -> Result<()> {
-        ctx.accounts.process(minimum_score, &ctx.bumps)
-    }
+    pub fn initialize_pool(ctx: Context<InitializePool>, minimum_score: u32, initial_liquidity: u64) -> Result<()> {
+    ctx.accounts.process(minimum_score, initial_liquidity, &ctx.bumps)
+}
 }

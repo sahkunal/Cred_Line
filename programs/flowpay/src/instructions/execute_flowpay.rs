@@ -100,7 +100,7 @@ let ix = anchor_lang::solana_program::instruction::Instruction {
     program_id: self.flow_score_program.key(),
     accounts: vec![
         anchor_lang::solana_program::instruction::AccountMeta::new(
-            self.flowpay.key(), true
+            self.signer.key(), true   // payer_signer — must be a real signer
         ),
         anchor_lang::solana_program::instruction::AccountMeta::new_readonly(
             self.payee.key(), false
@@ -128,17 +128,16 @@ let score_signer_seeds: &[&[&[u8]]] = &[&[
     &[self.flowpay.bump],
 ]];
 
-anchor_lang::solana_program::program::invoke_signed(
+anchor_lang::solana_program::program::invoke(
     &ix,
     &[
-        self.flowpay.to_account_info(),
+        self.signer.to_account_info(),
         self.payee.to_account_info(),
         self.payer.to_account_info(),
         self.payee_score.to_account_info(),
         self.payer_score.to_account_info(),
-        self.flow_score_program.to_account_info(),
+        self.system_program.to_account_info(),
     ],
-    score_signer_seeds,
 )?;
 
         Ok(())

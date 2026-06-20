@@ -1,29 +1,29 @@
 [toolchain]
-package_manager = "yarn"
 anchor_version = "0.29.0"
-solana_version = "2.1.0"
+solana_version = "4.1.0-beta.2"
 
 [features]
-resolution = true
 seeds = false
 skip-lint = false
 
 [programs.devnet]
-flowbadge= "J4AF7z9dq3GJoZqHDQnVfA1gWqok4uVGgLEZfXnQ3fZ3"
-flowlend= "Egw3ax73PVz2BcWejskqUTKKyKyvAWEJS4F2xCnfzgmq"
-flowpay= "2ckZpHaho8MjoKtepBE3NvrrtSKDSuSX7xoQ1Y8K6aa4"
-flowscore="EpnRYokwwxagwRqRASoK7ndKJBerhzHZnx6uxy7aGUS8"
+flowbadge = "GimhF4JiKJfvr2ydNkqcm57zUjGaFy1FSuki1RdLAuL4"
+flowlend = "2ftLyg3WpPoLdbRT1Hdy2gYGeizspERPkyR3rKxJA3Kc"
+flowpay = "DpcbN1E3mMKBRFgg2t7LL65ThbLAhjMzzfseT6R8dxzL"
+flowscore = "BZzGSPdGew1yDkWLfmigabKd6cGkBPRoEaZnAMm8cqAK"
 
-[provider]
-cluster = "devnet"
-wallet = "~/.config/solana/id.json"
-
-[scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+[programs.localnet]
+flowbadge = "GimhF4JiKJfvr2ydNkqcm57zUjGaFy1FSuki1RdLAuL4"
+flowlend = "2ftLyg3WpPoLdbRT1Hdy2gYGeizspERPkyR3rKxJA3Kc"
+flowpay = "DpcbN1E3mMKBRFgg2t7LL65ThbLAhjMzzfseT6R8dxzL"
+flowscore = "BZzGSPdGew1yDkWLfmigabKd6cGkBPRoEaZnAMm8cqAK"
 
 [registry]
 url = "https://api.apr.dev"
 
-[hooks]
+[provider]
+cluster = "Localnet"
+wallet = "/home/tyler/.config/solana/id.json"
 
-
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
