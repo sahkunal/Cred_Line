@@ -195,7 +195,7 @@ git clone https://github.com/sahkunal/Cred_Line
 cd Cred_Line
 
 anchor build
-cargo test -- --nocapture
+anchor test 
 ```
 
 > Program IDs for FlowScore, FlowPay, FlowBadge, and FlowLend need updating in each program's `declare_id!`, and FlowBadge/FlowLend's `Cargo.toml` need `flowscore = { path = "../flowscore", features = ["cpi"] }` to read its account types.
