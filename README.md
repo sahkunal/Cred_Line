@@ -184,7 +184,7 @@ FlowScore
 - **Solana** — L1
 - **Anchor** — program framework
 - **SPL Token** — USDC transfers via delegate, on-chain clock enforcement
-- **Rust + LiteSVM** — programs and fast local integration tests
+- **Rust + typescript** — programs and fast local integration tests
 
 ---
 
